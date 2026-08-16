@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+load_test_results_*.json
+
+# Runtime logs are written by the service; keep the directory, drop the files
+var/log/*.log
+
+# Local database volume
+.postgres-data/
