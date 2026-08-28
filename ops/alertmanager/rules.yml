@@ -1,0 +1,70 @@
+# Prometheus alerting rules for checkout-api.
+# Load with: prometheus --config.file=... (rule_files: ops/alertmanager/rules.yml)
+groups:
+  - name: checkout-api.rules
+    rules:
+      - alert: PostgresConnectionPoolExhaustion
+        expr: >
+          checkout_api_db_pool_checked_out
+            >= (checkout_api_db_pool_size + checkout_api_db_pool_overflow - 2)
+        for: 2m
+        labels:
+          severity: critical
+          service: checkout-api
+          environment: production
+        annotations:
+          summary: "checkout-api database connection pool is nearly exhausted"
+          description: >-
+            {{ $value }} of {{ printf "%.0f" (add (query "checkout_api_db_pool_size") 0) }} pooled
+            connections are checked out on {{ $labels.instance }}. Checkout requests will start
+            failing with DATABASE_POOL_EXHAUSTED.
+          runbook_url: "docs/runbooks/postgres-connection-pool.md"
+
+      - alert: CheckoutHighLatency
+        expr: >
+          histogram_quantile(
+            0.99,
+            sum by (le) (rate(checkout_api_checkout_duration_seconds_bucket[5m]))
+          ) > 3
+        for: 5m
+        labels:
+          severity: warning
+          service: checkout-api
+          environment: production
+        annotations:
+          summary: "checkout p99 latency above 3s"
+          description: >-
+            p99 checkout latency is {{ $value | humanize }}s over the last 5 minutes
+            (threshold 3s). Inspect dependency latencies and DB pool wait time.
+          runbook_url: "docs/runbooks/checkout-latency.md"
+
+      - alert: CheckoutErrorRateHigh
+        expr: >
+          sum(rate(checkout_api_checkout_failures_total[5m]))
+            / sum(rate(checkout_api_checkout_attempts_total[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          service: checkout-api
+          environment: production
+        annotations:
+          summary: "checkout failure rate above 5%"
+          description: >-
+            {{ $value | humanizePercentage }} of checkouts are failing. Break down by
+            error_code (PAYMENT_REJECTED, PAYMENT_TIMEOUT, DATABASE_POOL_EXHAUSTED,
+            INVENTORY_CONFLICT) before paging the payments team.
+          runbook_url: "docs/runbooks/checkout-latency.md"
+
+      - alert: CheckoutDependencyErrors
+        expr: sum by (dependency, error_type) (rate(checkout_api_dependency_errors_total[5m])) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          service: checkout-api
+          environment: production
+        annotations:
+          summary: "checkout-api dependency errors from {{ $labels.dependency }}"
+          description: >-
+            {{ $labels.dependency }} is returning {{ $labels.error_type }} errors at
+            {{ $value | humanize }} per second.
+          runbook_url: "docs/runbooks/checkout-latency.md"
