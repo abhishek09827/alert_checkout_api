@@ -1,0 +1,42 @@
+[
+  {
+    "id": "8f3b1c6e-2a44-4f0e-9c31-6b7a1d2e5f01",
+    "timestamp": "2026-09-21T09:15:00+00:00",
+    "service": "checkout-api",
+    "environment": "staging",
+    "version": "0.1.0",
+    "commit_sha": "6f2c9b7",
+    "status": "success",
+    "deployed_by": "github-actions/ci"
+  },
+  {
+    "id": "b41d7f88-9e02-4b6a-8f55-1c0d3e9a7b2c",
+    "timestamp": "2026-09-24T20:40:12+00:00",
+    "service": "checkout-api",
+    "environment": "production",
+    "version": "0.1.0",
+    "commit_sha": "a1b2c3d",
+    "status": "success",
+    "deployed_by": "priya.on-call@example.com"
+  },
+  {
+    "id": "c9e5a2d1-3f7b-4c88-9a10-5d2e6b8f4a77",
+    "timestamp": "2026-09-25T02:12:48+00:00",
+    "service": "checkout-api",
+    "environment": "production",
+    "version": "0.1.0",
+    "commit_sha": "a1b2c3d",
+    "status": "rolled_back",
+    "deployed_by": "priya.on-call@example.com"
+  },
+  {
+    "id": "10cc2331-8d7a-44ba-a246-0ec1aa2c1195",
+    "timestamp": "2026-09-28T17:13:29.196232+00:00",
+    "service": "checkout-api",
+    "environment": "production",
+    "version": "0.1.0",
+    "commit_sha": "93f8a27",
+    "status": "success",
+    "deployed_by": "ops@example.com"
+  }
+]
