@@ -1,0 +1,40 @@
+{
+  "receiver": "ops-pilot-webhook",
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "PostgresConnectionPoolExhaustion",
+        "service": "checkout-api",
+        "environment": "production",
+        "severity": "critical",
+        "instance": "checkout-api-7b9c8f5-xyz",
+        "namespace": "checkout"
+      },
+      "annotations": {
+        "summary": "PostgreSQL connection pool near exhaustion",
+        "description": "checkout-api pod checkout-api-7b9c8f5-xyz has 28/30 connections checked out. Pool size: 20, Max overflow: 10. Current wait time p99: 2.5s",
+        "runbook_url": "https://github.com/your-org/checkout-api/blob/main/docs/runbooks/postgres-connection-pool.md"
+      },
+      "startsAt": "2024-01-15T14:32:10.123Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "http://prometheus:9090/graph?g0.expr=checkout_api_db_pool_checked_out+%3E%3D+(checkout_api_db_pool_size+%2B+checkout_api_db_pool_overflow+-+2)&g0.tab=1"
+    }
+  ],
+  "groupLabels": {
+    "alertname": "PostgresConnectionPoolExhaustion",
+    "service": "checkout-api"
+  },
+  "commonLabels": {
+    "service": "checkout-api",
+    "environment": "production"
+  },
+  "commonAnnotations": {
+    "runbook_url": "https://github.com/your-org/checkout-api/blob/main/docs/runbooks/postgres-connection-pool.md"
+  },
+  "externalURL": "http://alertmanager:9093",
+  "version": "4",
+  "groupKey": "{}/{service=\"checkout-api\"}:{alertname=\"PostgresConnectionPoolExhaustion\"}",
+  "truncatedAlerts": 0
+}
