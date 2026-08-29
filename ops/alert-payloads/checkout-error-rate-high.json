@@ -1,0 +1,40 @@
+{
+  "receiver": "ops-pilot-webhook",
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "CheckoutErrorRateHigh",
+        "service": "checkout-api",
+        "environment": "production",
+        "severity": "critical",
+        "instance": "checkout-api-7b9c8f5-xyz",
+        "namespace": "checkout"
+      },
+      "annotations": {
+        "summary": "Checkout error rate exceeds 5%",
+        "description": "checkout-api checkout error rate is 8.2% over 5m window. Top errors: PAYMENT_TIMEOUT (45%), DATABASE_POOL_EXHAUSTED (30%), PAYMENT_REJECTED (25%). Current RPS: 150",
+        "runbook_url": "https://github.com/your-org/checkout-api/blob/main/docs/runbooks/checkout-latency.md"
+      },
+      "startsAt": "2024-01-15T14:50:00.000Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "http://prometheus:9090/graph?g0.expr=rate(checkout_api_checkout_failures_total%5B5m%5D)+%3E+0.05&g0.tab=1"
+    }
+  ],
+  "groupLabels": {
+    "alertname": "CheckoutErrorRateHigh",
+    "service": "checkout-api"
+  },
+  "commonLabels": {
+    "service": "checkout-api",
+    "environment": "production"
+  },
+  "commonAnnotations": {
+    "runbook_url": "https://github.com/your-org/checkout-api/blob/main/docs/runbooks/checkout-latency.md"
+  },
+  "externalURL": "http://alertmanager:9093",
+  "version": "4",
+  "groupKey": "{}/{service=\"checkout-api\"}:{alertname=\"CheckoutErrorRateHigh\"}",
+  "truncatedAlerts": 0
+}
