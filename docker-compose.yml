@@ -1,0 +1,121 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: checkout-postgres
+    environment:
+      POSTGRES_USER: checkout
+      POSTGRES_PASSWORD: checkout
+      POSTGRES_DB: checkout
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U checkout -d checkout"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    container_name: checkout-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  checkout-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: checkout-api
+    environment:
+      - SERVICE_NAME=checkout-api
+      - ENVIRONMENT=development
+      - VERSION=0.1.0
+      - DATABASE_URL=postgresql+asyncpg://checkout:checkout@postgres:5432/checkout
+      - REDIS_URL=redis://redis:6379/0
+      - DB_POOL_SIZE=10
+      - DB_MAX_OVERFLOW=5
+      - DB_POOL_TIMEOUT=30
+      - LOG_LEVEL=INFO
+      - METRICS_ENABLED=true
+      - PAYMENT_SERVICE_URL=http://payment-service:8001
+      - INVENTORY_SERVICE_URL=http://inventory-service:8002
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./var/log:/var/log
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Mock services for testing
+  payment-service:
+    image: kennethreitz/httpbin
+    container_name: checkout-payment-mock
+    ports:
+      - "8001:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/get"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  inventory-service:
+    image: kennethreitz/httpbin
+    container_name: checkout-inventory-mock
+    ports:
+      - "8002:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/get"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: checkout-network
