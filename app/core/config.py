@@ -20,8 +20,8 @@ class Settings(BaseSettings):
 
     # --- PostgreSQL ---
     database_url: str = "postgresql+asyncpg://checkout:checkout@localhost:5432/checkout"
-    db_pool_size: int = 10
-    db_max_overflow: int = 5
+    db_pool_size: int = 20  # raised ahead of the Black Friday traffic forecast
+    db_max_overflow: int = 5  # unchanged: forecast did not model bursty checkouts
     db_pool_timeout: int = 30
     db_pool_recycle: int = 1800
     db_pool_pre_ping: bool = True

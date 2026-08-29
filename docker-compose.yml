@@ -58,7 +58,7 @@ services:
       - VERSION=0.1.0
       - DATABASE_URL=postgresql+asyncpg://checkout:checkout@postgres:5432/checkout
       - REDIS_URL=redis://redis:6379/0
-      - DB_POOL_SIZE=10
+      - DB_POOL_SIZE=20
       - DB_MAX_OVERFLOW=5
       - DB_POOL_TIMEOUT=30
       - LOG_LEVEL=INFO
