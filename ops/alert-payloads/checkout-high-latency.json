@@ -1,0 +1,40 @@
+{
+  "receiver": "ops-pilot-webhook",
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "CheckoutHighLatency",
+        "service": "checkout-api",
+        "environment": "production",
+        "severity": "warning",
+        "instance": "checkout-api-7b9c8f5-xyz",
+        "namespace": "checkout"
+      },
+      "annotations": {
+        "summary": "Checkout p99 latency exceeds 3 seconds",
+        "description": "checkout-api p99 checkout latency is 4.2s (threshold: 3s). Payment gateway p99: 3.8s, DB p99: 0.3s. Affected endpoints: /api/v1/orders/checkout",
+        "runbook_url": "https://github.com/your-org/checkout-api/blob/main/docs/runbooks/checkout-latency.md"
+      },
+      "startsAt": "2024-01-15T14:45:00.000Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "http://prometheus:9090/graph?g0.expr=histogram_quantile(0.99%2C+rate(checkout_api_checkout_duration_seconds_bucket%5B5m%5D))+%3E+3&g0.tab=1"
+    }
+  ],
+  "groupLabels": {
+    "alertname": "CheckoutHighLatency",
+    "service": "checkout-api"
+  },
+  "commonLabels": {
+    "service": "checkout-api",
+    "environment": "production"
+  },
+  "commonAnnotations": {
+    "runbook_url": "https://github.com/your-org/checkout-api/blob/main/docs/runbooks/checkout-latency.md"
+  },
+  "externalURL": "http://alertmanager:9093",
+  "version": "4",
+  "groupKey": "{}/{service=\"checkout-api\"}:{alertname=\"CheckoutHighLatency\"}",
+  "truncatedAlerts": 0
+}
