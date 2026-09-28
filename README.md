@@ -114,6 +114,55 @@ RUN_INTEGRATION=1 ./.venv/bin/python -m pytest -q   # with Postgres + Redis up
 * `docs/runbooks/checkout-latency.md` — high checkout latency
 * `docs/architecture.md`, `docs/operations.md`
 
+## Run checkout-api together with OpsPilot.ai
+
+Ports: checkout-api `8000`, evidence integrations `8100` (logs/deployments) and `8200`
+(runbook RAG), OpsPilot `8008`.
+
+```bash
+# Terminal 1 - dependencies + API
+cd /home/abhishek/checkout-api
+docker compose up -d postgres redis
+bash scripts/run_local.sh
+bash scripts/run_integrations.sh          # starts :8100 (logs/deployments) and :8200 (RAG)
+curl http://127.0.0.1:8000/health && curl http://127.0.0.1:8000/ready
+bash scripts/check_integrations.sh        # verify the three OpsPilot contracts
+
+# Terminal 2 - OpsPilot
+cd /home/abhishek/projects/OpsPilot.ai
+export GITHUB_TOKEN='your_github_pat'
+TRIAGE_LLM_ENABLED=false .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8008 --reload
+
+# Terminal 3 - register checkout-api, generate traffic, send an alert
+curl -X POST http://127.0.0.1:8008/api/v2/applications -H 'Content-Type: application/json' -d '{
+  "service_name": "checkout-api", "environment": "development",
+  "git": {"provider":"github","repository":"abhishek09827/alert_checkout_api","auth_env_var":"GITHUB_TOKEN"},
+  "logs": {"provider":"simulated_http","endpoint":"http://127.0.0.1:8100"},
+  "deployments": {"provider":"simulated_http","endpoint":"http://127.0.0.1:8100"},
+  "documents": {"provider":"rag_http","endpoint":"http://127.0.0.1:8200"},
+  "metadata": {"baseline_commit":"93f8a27"}
+}'
+curl -X POST http://127.0.0.1:8008/api/v2/applications/checkout-api/development/verify
+
+./.venv/bin/python scripts/load_test.py --users 150 --requests 10   # real traffic
+
+curl -X POST http://127.0.0.1:8008/api/v2/alerts/triage \
+  -H 'Content-Type: application/json' \
+  --data-binary @ops/alert-payloads/checkout-high-latency.json
+```
+
+Evidence endpoints implemented here (contract: `docs/HTTP_INTEGRATIONS.md` in the OpsPilot repo):
+
+| Endpoint | Backed by |
+|---|---|
+| `POST :8100/logs/search` | `var/log/checkout-api.log` (JSON lines, time-window + query filtered) |
+| `POST :8100/deployments/search` | `ops/deployments.json` |
+| `POST :8100/deployments/{id}` | single deployment record |
+| `POST :8200/search` | markdown docs + runbooks, keyword retrieval with citation ids |
+| `POST :8200/documents/{id}` | one document chunk by citation id |
+
+`bash scripts/run_integrations.sh stop` shuts the evidence endpoints down.
+
 ## Incident drill
 
 Branch `increase-db-pool-for-black-friday` changes the pool configuration in a plausible but
